@@ -1,0 +1,73 @@
+name: Build Studio Multi-Project
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/supabase-studio-multi
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout this repo (patches)
+        uses: actions/checkout@v4
+        with:
+          path: patches-repo
+
+      - name: Sparse checkout supabase/supabase (studio only)
+        run: |
+          git clone --filter=blob:none --no-checkout --depth=1 \
+            https://github.com/supabase/supabase.git supabase-src
+          cd supabase-src
+          git sparse-checkout init --cone
+          git sparse-checkout set \
+            apps/studio \
+            packages/ui \
+            packages/common \
+            packages/config \
+            packages/shared-data \
+            packages/icons
+          git checkout
+
+      - name: Apply patches
+        run: |
+          cp -rv patches-repo/patches/. supabase-src/
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=sha-
+
+      - name: Build and push (amd64 + arm64)
+        uses: docker/build-push-action@v5
+        with:
+          context: supabase-src/apps/studio
+          file: supabase-src/apps/studio/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
