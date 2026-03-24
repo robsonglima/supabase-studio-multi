@@ -40,6 +40,11 @@ jobs:
       - name: Apply our source patches
         run: cp -rv patches-repo/patches/. supabase-src/
 
+      - name: Set up QEMU (for arm64 cross-compile)
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -59,7 +64,7 @@ jobs:
             type=raw,value=latest
             type=sha,prefix=sha-
 
-      - name: Build and push (amd64)
+      - name: Build and push (arm64)
         uses: docker/build-push-action@v6
         with:
           context: supabase-src
@@ -67,7 +72,7 @@ jobs:
           build-args: |
             NEXT_PUBLIC_IS_PLATFORM=false
           target: production
-          platforms: linux/amd64
+          platforms: linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
