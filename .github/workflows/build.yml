@@ -65,7 +65,7 @@ jobs:
             type=raw,value=latest
             type=sha,prefix=sha-
 
-      - name: Build and push (amd64 + arm64)
+      - name: Build and push (amd64)
         uses: docker/build-push-action@v6
         with:
           context: supabase-src
@@ -73,7 +73,7 @@ jobs:
           build-args: |
             NEXT_PUBLIC_IS_PLATFORM=false
           target: production
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
