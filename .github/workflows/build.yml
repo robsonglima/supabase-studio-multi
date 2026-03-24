@@ -19,7 +19,8 @@ jobs:
     steps:
       - name: Add swap (8GB) to avoid OOM during Next.js build
         run: |
-          sudo fallocate -l 8G /swapfile
+          sudo swapoff -a || true
+          sudo dd if=/dev/zero of=/swapfile bs=1M count=8192 status=progress
           sudo chmod 600 /swapfile
           sudo mkswap /swapfile
           sudo swapon /swapfile
