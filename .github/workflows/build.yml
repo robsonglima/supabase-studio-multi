@@ -17,6 +17,14 @@ jobs:
       packages: write
 
     steps:
+      - name: Add swap (8GB) to avoid OOM during Next.js build
+        run: |
+          sudo fallocate -l 8G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          free -h
+
       - name: Checkout this repo (patches)
         uses: actions/checkout@v4
         with:
