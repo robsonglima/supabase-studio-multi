@@ -31,29 +31,14 @@ jobs:
         with:
           path: patches-repo
 
-      - name: Shallow clone supabase/supabase
-        run: |
-          git clone --depth=1 --filter=blob:none \
-            https://github.com/supabase/supabase.git supabase-src
-          cd supabase-src
-          git sparse-checkout init --cone
-          git sparse-checkout set \
-            apps/studio \
-            packages/ui \
-            packages/common \
-            packages/config \
-            packages/shared-data \
-            packages/icons \
-            packages/ai-commands \
-            patches
-          git checkout
+      - name: Shallow clone supabase/supabase (full, depth=1)
+        run: git clone --depth=1 https://github.com/supabase/supabase.git supabase-src
 
       - name: Create empty patches dir if missing
         run: mkdir -p supabase-src/patches
 
       - name: Apply our source patches
-        run: |
-          cp -rv patches-repo/patches/. supabase-src/
+        run: cp -rv patches-repo/patches/. supabase-src/
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
