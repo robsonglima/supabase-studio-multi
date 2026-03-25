@@ -29,6 +29,8 @@ COPY ./patches/ ./patches
 RUN pnpm install --frozen-lockfile
 
 FROM deps AS dev
+ARG PATCHES_HASH=0
+RUN echo "Patches hash: $PATCHES_HASH"
 COPY --from=turbo /app/out/full ./
 ENTRYPOINT ["docker-entrypoint.sh"]
 EXPOSE 8082

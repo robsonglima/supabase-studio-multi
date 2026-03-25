@@ -71,6 +71,7 @@ jobs:
           file: supabase-src/apps/studio/Dockerfile
           build-args: |
             NEXT_PUBLIC_IS_PLATFORM=false
+            PATCHES_HASH=${{ hashFiles('patches-repo/patches/**') }}
           target: production
           platforms: linux/arm64
           push: true
