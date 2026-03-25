@@ -38,6 +38,8 @@ CMD ["pnpm", "dev:studio"]
 
 # Compile Next.js — limit Node heap to avoid OOM on 7GB runners
 FROM dev AS builder
+ARG PATCHES_HASH=0
+RUN echo "Patches hash: $PATCHES_HASH"
 ENV NODE_OPTIONS="--max-old-space-size=5500"
 RUN pnpm --filter studio exec next build
 
