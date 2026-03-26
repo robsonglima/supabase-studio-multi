@@ -42,6 +42,7 @@ CMD ["pnpm", "dev:studio"]
 FROM dev AS builder
 ARG PATCHES_HASH=0
 RUN echo "Patches hash: $PATCHES_HASH"
+RUN echo "=== profile.ts content ===" && head -10 apps/studio/pages/api/platform/profile.ts
 ENV NODE_OPTIONS="--max-old-space-size=5500"
 RUN pnpm --filter studio exec next build
 
