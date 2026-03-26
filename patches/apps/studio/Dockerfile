@@ -19,6 +19,8 @@ RUN npm install -g pnpm@10.24.0
 WORKDIR /app
 
 FROM base AS turbo
+ARG PATCHES_HASH=0
+RUN echo "Patches hash: $PATCHES_HASH"
 COPY . .
 RUN pnpm dlx turbo@2.8.13 prune studio --docker
 
