@@ -18,23 +18,49 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-const handleGetAll = async (_req: NextApiRequest, res: NextApiResponse) => {
-  const selfHostedProjects = getAllProjects()
+function buildListProjectItem(args: { id: number; ref: string; name: string }) {
+  return {
+    cloud_provider: 'localhost',
+    id: args.id,
+    inserted_at: '2021-08-02T06:40:40.646Z',
+    is_branch_enabled: false,
+    is_physical_backups_enabled: false,
+    name: args.name,
+    organization_id: 1,
+    organization_slug: 'default',
+    preview_branch_refs: [] as string[],
+    ref: args.ref,
+    region: 'local',
+    status: 'ACTIVE_HEALTHY',
+    subscription_id: null as string | null,
+  }
+}
 
-  if (selfHostedProjects.length > 0) {
-    const projects = selfHostedProjects.map((p, i) => ({
-      id: i + 1,
-      ref: p.ref,
-      name: p.name,
-      organization_id: 1,
-      cloud_provider: 'localhost',
-      status: 'ACTIVE_HEALTHY',
-      region: 'local',
-      inserted_at: '2021-08-02T06:40:40.646Z',
-    }))
-    return res.status(200).json(projects)
+const handleGetAll = async (req: NextApiRequest, res: NextApiResponse) => {
+  const selfHostedProjects = getAllProjects()
+  const versionHeader = req.headers.version
+  const isV2 = versionHeader === '2'
+
+  const listProjects =
+    selfHostedProjects.length > 0
+      ? selfHostedProjects.map((p, i) =>
+          buildListProjectItem({ id: i + 1, ref: p.ref, name: p.name })
+        )
+      : [buildListProjectItem({ id: 1, ref: DEFAULT_PROJECT.ref, name: DEFAULT_PROJECT.name })]
+
+  if (isV2) {
+    const limit = Math.min(100, parseInt(String(req.query.limit ?? '100'), 10) || 100)
+    const offset = parseInt(String(req.query.offset ?? '0'), 10) || 0
+    const slice = listProjects.slice(offset, offset + limit)
+    return res.status(200).json({
+      pagination: {
+        count: listProjects.length,
+        limit,
+        offset,
+      },
+      projects: slice,
+    })
   }
 
-  // Fallback to single default project (original behavior)
-  return res.status(200).json([DEFAULT_PROJECT])
+  return res.status(200).json(listProjects)
 }
