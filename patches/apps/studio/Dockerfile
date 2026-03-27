@@ -42,7 +42,6 @@ CMD ["pnpm", "dev:studio"]
 FROM dev AS builder
 ARG PATCHES_HASH=0
 RUN echo "Patches hash: $PATCHES_HASH"
-RUN echo "=== profile files ===" && find apps/studio/pages/api/platform/profile* -type f 2>/dev/null && echo "=== profile.ts head ===" && head -5 apps/studio/pages/api/platform/profile.ts 2>/dev/null || echo "NOT FOUND"
 ENV NODE_OPTIONS="--max-old-space-size=5500"
 RUN pnpm --filter studio exec next build
 
