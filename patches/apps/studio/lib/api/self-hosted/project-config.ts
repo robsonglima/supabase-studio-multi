@@ -16,8 +16,6 @@
  * ]
  */
 
-import CryptoJS from 'crypto-js'
-
 export interface SelfHostedProject {
   ref: string
   name: string
@@ -51,6 +49,10 @@ export function getProjectByRef(ref: string): SelfHostedProject | undefined {
   return getAllProjects().find((p) => p.ref === ref)
 }
 
+import CryptoJS from 'crypto-js'
+
+// Returns a CryptoJS-AES-encrypted connection string for use with the
+// x-connection-encrypted header expected by pg-meta.
 export function buildEncryptedConnectionString(db: string): string {
   const cryptoKey = process.env.PG_META_CRYPTO_KEY || ''
   const user = process.env.POSTGRES_USER_READ_WRITE || 'supabase_admin'

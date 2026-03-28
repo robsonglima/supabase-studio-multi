@@ -22,7 +22,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
 const handleGetAll = async (req: NextApiRequest, res: NextApiResponse) => {
   const headers = constructHeaders(req.headers)
-  const response = await fetchGet(getPgMetaRedirectUrl(req, 'extensions'), { headers })
+  const { url, encryptedConn } = getPgMetaRedirectUrl(req, 'extensions')
+
+  if (encryptedConn) {
+    headers['x-connection-encrypted'] = encryptedConn
+  }
+
+  const response = await fetchGet(url, { headers })
 
   if (response.error) {
     const { code, message } = response.error

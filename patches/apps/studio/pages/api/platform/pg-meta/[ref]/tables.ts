@@ -22,10 +22,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 }
 
 /**
- * Build the pg-meta redirect URL, injecting a project-specific encrypted
- * connection string when the request targets a non-default project ref.
+ * Build the pg-meta URL for the given endpoint, stripping the `ref` param.
+ * Returns the URL and optionally an encrypted connection header for project routing.
  */
-export function getPgMetaRedirectUrl(req: NextApiRequest, endpoint: string) {
+export function getPgMetaRedirectUrl(
+  req: NextApiRequest,
+  endpoint: string
+): { url: string; encryptedConn: string | null } {
   const { ref, ...restQuery } = req.query as Record<string, string | string[]>
 
   const query = Object.entries(restQuery).reduce((q, [key, value]) => {
@@ -37,21 +40,27 @@ export function getPgMetaRedirectUrl(req: NextApiRequest, endpoint: string) {
     return q
   }, new URLSearchParams())
 
-  // For project-specific databases, inject the encrypted connection string
-  const project = getProjectByRef(ref as string)
-  if (project?.db) {
-    query.set('pg', buildEncryptedConnectionString(project.db))
-  }
-
   let url = `${PG_META_URL}/${endpoint}`
   const qs = query.toString()
   if (qs) url += `?${qs}`
-  return url
+
+  // For project-specific databases, return an encrypted connection string
+  // to be sent as the x-connection-encrypted header (required by pg-meta)
+  const project = getProjectByRef(ref as string)
+  const encryptedConn = project?.db ? buildEncryptedConnectionString(project.db) : null
+
+  return { url, encryptedConn }
 }
 
 const handleGetAll = async (req: NextApiRequest, res: NextApiResponse) => {
   const headers = constructHeaders(req.headers)
-  const response = await fetchGet(getPgMetaRedirectUrl(req, 'tables'), { headers })
+  const { url, encryptedConn } = getPgMetaRedirectUrl(req, 'tables')
+
+  if (encryptedConn) {
+    headers['x-connection-encrypted'] = encryptedConn
+  }
+
+  const response = await fetchGet(url, { headers })
 
   if (response.error) {
     const { code, message } = response.error
