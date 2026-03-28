@@ -38,8 +38,6 @@ function buildListProjectItem(args: { id: number; ref: string; name: string }) {
 
 const handleGetAll = async (req: NextApiRequest, res: NextApiResponse) => {
   const selfHostedProjects = getAllProjects()
-  const versionHeader = req.headers.version
-  const isV2 = versionHeader === '2'
 
   const listProjects =
     selfHostedProjects.length > 0
@@ -48,19 +46,15 @@ const handleGetAll = async (req: NextApiRequest, res: NextApiResponse) => {
         )
       : [buildListProjectItem({ id: 1, ref: DEFAULT_PROJECT.ref, name: DEFAULT_PROJECT.name })]
 
-  if (isV2) {
-    const limit = Math.min(100, parseInt(String(req.query.limit ?? '100'), 10) || 100)
-    const offset = parseInt(String(req.query.offset ?? '0'), 10) || 0
-    const slice = listProjects.slice(offset, offset + limit)
-    return res.status(200).json({
-      pagination: {
-        count: listProjects.length,
-        limit,
-        offset,
-      },
-      projects: slice,
-    })
-  }
-
-  return res.status(200).json(listProjects)
+  const limit = Math.min(100, parseInt(String(req.query.limit ?? '100'), 10) || 100)
+  const offset = parseInt(String(req.query.offset ?? '0'), 10) || 0
+  const slice = listProjects.slice(offset, offset + limit)
+  return res.status(200).json({
+    pagination: {
+      count: listProjects.length,
+      limit,
+      offset,
+    },
+    projects: slice,
+  })
 }
