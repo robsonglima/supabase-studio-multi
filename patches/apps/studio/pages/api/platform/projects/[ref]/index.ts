@@ -40,8 +40,12 @@ const handleGet = async (req: NextApiRequest, res: NextApiResponse) => {
         restUrl: PROJECT_REST_URL,
       })
     }
-    // ref not found — return 404
-    return res.status(404).json({ data: null, error: { message: 'Project not found' } })
+    // ref not found — fall back to default project
+    return res.status(200).json({
+      ...DEFAULT_PROJECT,
+      connectionString: '',
+      restUrl: PROJECT_REST_URL,
+    })
   }
 
   // Fallback: single default project (original behavior)
